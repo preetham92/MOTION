@@ -1,0 +1,106 @@
+﻿
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Network Health Console</title>
+<style>
+:root{--bg:#f4f6fa;--card:#fff;--ink:#0f1b2d;--mute:#64748b;--line:#e3e8ef;--accent:#2563eb;--ok:#15803d;--okbg:#dcfce7;--bad:#b91c1c;--badbg:#fee2e2;--warn:#b45309;--warnbg:#fef3c7;--row:#f8fafc;--act:#eff6ff;--code:#0f172a;--codeink:#e2e8f0}
+@media (prefers-color-scheme:dark){:root{--bg:#0b1220;--card:#131c2e;--ink:#e6ebf5;--mute:#8da0bd;--line:#223049;--accent:#60a5fa;--ok:#4ade80;--okbg:#0f3320;--bad:#f87171;--badbg:#3b1417;--warn:#fbbf24;--warnbg:#3a2a0b;--row:#16213a;--act:#15294d;--code:#070d19;--codeink:#cbd5e1}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:1300px;margin:0 auto;padding:24px 20px 60px}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:20px}
+h1{margin:0;font-size:25px}.sub{color:var(--mute);font-size:13px}
+.grid{display:grid;grid-template-columns:330px 1fr;gap:20px;align-items:start}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+.panel,.dev,.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px}
+.panel{padding:18px;position:sticky;top:16px}
+.h{display:flex;justify-content:space-between;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);margin:14px 0 6px}.h:first-child{margin-top:0}
+.h a{color:var(--accent);text-transform:none;letter-spacing:0;cursor:pointer}
+select,textarea{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:var(--row);color:var(--ink);font:inherit}
+textarea{resize:vertical;font-family:Consolas,monospace}
+.ck{display:flex;gap:9px;padding:6px 8px;border-radius:8px;cursor:pointer}.ck:hover{background:var(--row)}
+.ck span{display:flex;flex-direction:column;font-size:14px}.ck code{font-size:11.5px;color:var(--mute)}
+button{width:100%;margin-top:14px;padding:11px;border:0;border-radius:10px;background:var(--accent);color:#fff;font:600 15px inherit;cursor:pointer}
+button:disabled{opacity:.5;cursor:wait}button.alt{background:var(--row);color:var(--ink);border:1px solid var(--line);width:auto;padding:8px 16px;margin:0 10px 0 0;font-size:14px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.kpi{padding:12px 16px}.kpi span{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute)}.kpi b{display:block;font-size:26px;line-height:1.2}
+.dev{margin-bottom:18px;overflow:hidden}
+.dh{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
+.dh h2{margin:0;font-size:18px}
+.pill{padding:2px 11px;border-radius:99px;font-size:12px;font-weight:600;margin-left:6px}
+.pill.ok{background:var(--okbg);color:var(--ok)}.pill.failed,.pill.bad{background:var(--badbg);color:var(--bad)}.pill.attention,.pill.warn{background:var(--warnbg);color:var(--warn)}.pill.running{background:var(--row);color:var(--mute)}
+details.cmd{padding:12px 18px;border-bottom:1px solid var(--line)}details.cmd:last-child{border:0}
+summary{cursor:pointer;font-weight:600}summary code{font-weight:400;color:var(--mute);font-size:12.5px;margin-left:6px}
+.th{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0 8px}
+.chip{background:var(--row);border:1px solid var(--line);border-radius:8px;padding:2px 9px;font-size:12px;color:var(--mute)}.chip b{color:var(--ink)}
+.chip.warn{background:var(--warnbg);border-color:transparent;color:var(--warn)}.chip.warn b{color:var(--warn)}
+.scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;color:var(--mute);font-size:11px;text-transform:uppercase;letter-spacing:.06em;padding:7px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr.act td{background:var(--act)}tr.act td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+td.a{color:var(--ok);font-weight:600}td.b{color:var(--mute)}
+.mono{font-family:Consolas,monospace}.sm{color:var(--mute);font-size:12.5px}
+.badge{padding:1px 9px;border-radius:6px;font-size:12px;font-weight:600;background:var(--row);border:1px solid var(--line)}
+pre{background:var(--code);color:var(--codeink);padding:13px;border-radius:10px;overflow:auto;font:12.5px/1.5 Consolas,monospace;margin:10px 0 0;max-height:420px}
+.err{padding:16px 18px;color:var(--bad)}#actions{margin-top:16px}
+</style></head><body><div class="wrap">
+<header><h1>Network Health Console</h1><span class="sub">Read-only checks &middot; Juniper Junos</span></header>
+<div class="grid">
+  <aside class="panel">
+    <div class="h">Device type</div>
+    <select id="type"><option value="router">Router</option><option value="switch">Switch</option></select>
+    <div class="h">Commands <a id="all">select all</a></div>
+    <div id="cmds"></div>
+    <div class="h">Device IPs (comma separated)</div>
+    <textarea id="ips" rows="3" placeholder="10.0.0.1, 10.0.0.2"></textarea>
+    <button id="run">Run checks</button>
+    <div id="msg" class="sub" style="margin-top:8px"></div>
+  </aside>
+  <main>
+    <div class="kpis" id="kpis"></div>
+    <div id="out"><p class="sub">Pick a device type, tick the commands, enter the IPs and press Run.</p></div>
+    <div id="actions"></div>
+  </main>
+</div></div>
+<script>
+const TOKEN="__TOKEN__",$=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const arr=x=>x==null?[]:[].concat(x);
+const api=(p,b)=>fetch(p,{method:b?"POST":"GET",headers:{"X-Token":TOKEN,"Content-Type":"application/json"},body:b?JSON.stringify(b):undefined}).then(r=>r.json());
+const label={ok:"Healthy",attention:"Attention",failed:"Failed",running:"Running…"};
+let cat={},texts=[],stat={},saved="";
+
+const drawCmds=()=>{$("#cmds").innerHTML=arr(cat[$("#type").value]).map((c,i)=>`<label class="ck"><input type="checkbox" value="${esc(c.id)}" ${i==0?"checked":""}><span>${esc(c.label)}<code>${esc(c.cmd)}</code></span></label>`).join("")};
+$("#type").onchange=drawCmds;
+$("#all").onclick=()=>{const b=[...document.querySelectorAll("#cmds input")],on=b.some(x=>!x.checked);b.forEach(x=>x.checked=on)};
+api("/api/commands").then(c=>{cat=c;drawCmds()}).catch(()=>$("#msg").textContent="Cannot reach the backend. Is the PowerShell script running?");
+
+const kpis=n=>{$("#kpis").innerHTML=[["Devices",n,""],["Healthy",stat.ok,"var(--ok)"],["Attention",stat.attention,"var(--warn)"],["Failed",stat.failed,"var(--bad)"]].map(([k,v,c])=>`<div class="kpi"><span>${k}</span><b style="color:${c}">${v}</b></div>`).join("")};
+
+const routeTable=t=>{let last="";return `<div class="th"><b class="mono">${esc(t.name)}</b>${[["Destinations",t.dest],["Routes",t.routes],["Active",t.active],["Holddown",t.hold,t.hold>0],["Hidden",t.hidden,t.hidden>0]].map(([k,v,w])=>`<span class="chip${w?" warn":""}">${k} <b>${Number(v).toLocaleString()}</b></span>`).join("")}</div><div class="scroll"><table><thead><tr>${["Prefix","State","Protocol","Pref","Age","Next hop","Interface","Details"].map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${arr(t.rows).map(r=>{const p=r.prefix===last?"":r.prefix;last=r.prefix;return `<tr class="${r.active?"act":""}"><td class="mono">${esc(p)}</td><td class="${r.active?"a":"b"}">${r.active?"● Active":"Backup"}</td><td><span class="badge">${esc(r.proto)}</span></td><td>${esc(r.pref)}</td><td>${esc(r.age)}</td><td class="mono">${esc(r.nextHop)}</td><td class="mono">${esc(r.via)}</td><td class="sm">${esc([r.extra,r.asPath&&"AS path: "+r.asPath].filter(Boolean).join(" | "))}</td></tr>`}).join("")}</tbody></table></div>`};
+
+const cmdBlock=c=>`<details open class="cmd"><summary>${esc(c.label)}<code>${esc(c.cmd)}</code>${c.exit!==0?`<span class="pill bad">exit ${c.exit}</span>`:c.attention?`<span class="pill warn">attention</span>`:""}</summary>${arr(c.tables).length?arr(c.tables).map(routeTable).join(""):`<pre>${esc(c.output||"(no output)")}</pre>`}</details>`;
+
+const head=(ip,s,sec)=>`<div class="dh"><h2>${esc(ip)}</h2><div class="sub">${sec!=null?sec+"s":""}<span class="pill ${s}">${label[s]}</span></div></div>`;
+
+$("#run").onclick=async()=>{
+  const ips=[...new Set($("#ips").value.split(",").map(s=>s.trim()).filter(Boolean))];
+  const ids=[...document.querySelectorAll("#cmds input:checked")].map(i=>i.value);
+  if(!ips.length||!ids.length){$("#msg").textContent="Enter at least one IP and tick at least one command.";return}
+  const runId=new Date().toISOString().replace(/[-:T]/g,"").slice(0,14),type=$("#type").value;
+  texts=[];saved="";stat={ok:0,attention:0,failed:0};
+  $("#out").innerHTML="";$("#actions").innerHTML="";$("#msg").textContent="";$("#run").disabled=true;kpis(ips.length);
+  for(const [i,ip] of ips.entries()){
+    $("#out").insertAdjacentHTML("beforeend",`<section class="dev" id="d${i}">${head(ip,"running")}</section>`);
+    let r;
+    try{r=await api("/api/run",{device:ip,type,commands:ids,runId})}catch(e){r={error:String(e)}}
+    if(r.error)r={status:"failed",commands:[],seconds:0,text:`DEVICE: ${ip}\nERROR: ${r.error}\n`,err:r.error};
+    stat[r.status]++;texts.push(r.text);if(r.file)saved=r.file;
+    $("#d"+i).innerHTML=head(ip,r.status,r.seconds)+(r.err?`<div class="err">${esc(r.err)}</div>`:arr(r.commands).map(cmdBlock).join(""));
+    kpis(ips.length);
+  }
+  $("#run").disabled=false;
+  $("#actions").innerHTML=`<button class="alt" id="dl">Download .txt</button><span class="sub">${saved?"Saved on this PC: "+esc(saved):""}</span>`;
+  $("#dl").onclick=()=>{const b=new Blob([`NETWORK HEALTH REPORT\nGenerated: ${new Date().toLocaleString()}\nDevices: ${ips.length}\n\n`+texts.join("\n")],{type:"text/plain"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=`health_report_${runId}.txt`;a.click()};
+};
+</script></body></html>
